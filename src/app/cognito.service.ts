@@ -17,6 +17,8 @@ export interface IUser {
 })
 export class CognitoService {
 
+  readonly ACCESS_TOKEN_ID = 'access_token';
+  private storage: Storage = localStorage;
   private authenticationSubject: BehaviorSubject<any>;
 
   constructor() {
@@ -41,7 +43,10 @@ export class CognitoService {
   public signIn(user: IUser): Promise<any> {
     return Auth.signIn(user.email, user.password)
     .then(() => {
-      this.authenticationSubject.next(true);
+      Auth.currentSession().then(session => {
+        this.storage.setItem(this.ACCESS_TOKEN_ID, session.getAccessToken().getJwtToken())
+        this.authenticationSubject.next(true);
+      })
     });
   }
 
@@ -78,6 +83,10 @@ export class CognitoService {
     .then((cognitoUser: any) => {
       return Auth.updateUserAttributes(cognitoUser, user);
     });
+  }
+
+  public getAccessToken(): string | null {
+    return this.storage.getItem(this.ACCESS_TOKEN_ID);
   }
 
 }
