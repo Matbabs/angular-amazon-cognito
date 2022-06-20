@@ -10,18 +10,12 @@ import { CognitoService } from './cognito.service';
 })
 export class AppComponent implements OnInit {
 
-  isAuthenticated: boolean;
-
   constructor(private router: Router,
               private cognitoService: CognitoService) {
-    this.isAuthenticated = false;
   }
 
   public ngOnInit(): void {
-    this.cognitoService.isAuthenticated()
-    .then((success: boolean) => {
-      this.isAuthenticated = success;
-    });
+    
   }
 
   public signOut(): void {
@@ -29,6 +23,10 @@ export class AppComponent implements OnInit {
     .then(() => {
       this.router.navigate(['/signIn']);
     });
+  }
+
+  public isAuthenticated(): boolean {
+    return this.cognitoService.isAuthenticated().value
   }
 
 }

@@ -5,6 +5,7 @@ import Amplify, { Auth } from 'aws-amplify';
 import { environment } from '../environments/environment';
 
 export interface IUser {
+  username: string;
   email: string;
   password: string;
   showPassword: boolean;
@@ -31,17 +32,20 @@ export class CognitoService {
 
   public signUp(user: IUser): Promise<any> {
     return Auth.signUp({
-      username: user.email,
+      username: user.username,
       password: user.password,
+      attributes: {
+        email: user.email
+      }
     });
   }
 
   public confirmSignUp(user: IUser): Promise<any> {
-    return Auth.confirmSignUp(user.email, user.code);
+    return Auth.confirmSignUp(user.username, user.code);
   }
 
   public signIn(user: IUser): Promise<any> {
-    return Auth.signIn(user.email, user.password)
+    return Auth.signIn(user.username, user.password)
     .then(() => {
       Auth.currentSession().then(session => {
         this.storage.setItem(this.ACCESS_TOKEN_ID, session.getAccessToken().getJwtToken())
@@ -57,21 +61,8 @@ export class CognitoService {
     });
   }
 
-  public isAuthenticated(): Promise<boolean> {
-    if (this.authenticationSubject.value) {
-      return Promise.resolve(true);
-    } else {
-      return this.getUser()
-      .then((user: any) => {
-        if (user) {
-          return true;
-        } else {
-          return false;
-        }
-      }).catch(() => {
-        return false;
-      });
-    }
+  public isAuthenticated(): BehaviorSubject<boolean> {
+    return this.authenticationSubject
   }
 
   public getUser(): Promise<any> {
